@@ -91,8 +91,9 @@ if [ "$1" = 'postgres' ]; then
 		} >> "$PGDATA/pg_hba.conf"
               
                 # Add extensions
-                echo "shared_preload_libraries = 'pg_cron'" >> $PGDATA/postgresql.conf
-                echo "cron.database_name = 'postgres'" >> $PGDATA/postgresql.conf
+                # echo "shared_preload_libraries = 'pg_cron'" >> $PGDATA/postgresql.conf
+				echo "shared_preload_libraries = 'timescaledb'" >> $PGDATA/postgresql.conf
+                # echo "cron.database_name = 'postgres'" >> $PGDATA/postgresql.conf
               
 		# internal start of server in order to allow set-up using psql-client
 		# does not listen on external TCP/IP and waits until start finishes
