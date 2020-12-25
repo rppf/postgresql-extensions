@@ -1,16 +1,25 @@
 FROM postgres:12-alpine
 
-RUN apk --no-cache add postgis build-base git
+RUN apk --no-cache add postgis
 
-COPY install-timescale.sh /usr/local/bin
+RUN apk --no-cache add timescaledb -U --repository https://sjc.edge.kernel.org/alpine/edge/testing
 
-RUN chmod a+x /usr/local/bin/install-timescale.sh
+RUN apk --no-cache add gosu -U --repository https://sjc.edge.kernel.org/alpine/edge/testing
 
-RUN /usr/local/bin/install-timescale.sh
+RUN cp -R /usr/share/postgresql/extension/* /usr/local/share/postgresql/extension
 
-# RUN apk --no-cache add postgresql-pg_cron -U --repository https://sjc.edge.kernel.org/alpine/edge/community
+RUN cp -R /usr/lib/postgresql/* /usr/local/lib/postgresql
 
-# RUN apk --no-cache add gosu -U --repository https://sjc.edge.kernel.org/alpine/edge/testing
+ENV PG_CRON_VERSION 1.3.0
+
+RUN apk add --no-cache --virtual .build-deps build-base ca-certificates clang-dev llvm10 openssl tar \
+    && wget -O /pg_cron.tgz https://github.com/citusdata/pg_cron/archive/v$PG_CRON_VERSION.tar.gz \
+    && tar xvzf /pg_cron.tgz && cd pg_cron-$PG_CRON_VERSION \
+    && sed -i.bak -e 's/-Werror//g' Makefile \
+    && sed -i.bak -e 's/-Wno-implicit-fallthrough//g' Makefile \
+    && make && make install \
+    && cd .. && rm -rf pg_cron.tgz && rm -rf pg_cron-* \
+    && apk del .build-deps
 
 COPY docker-entrypoint.sh /usr/local/bin/
 
